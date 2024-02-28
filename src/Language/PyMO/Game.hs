@@ -50,12 +50,11 @@ loadScripts gameDir' scriptAlreadyLoaded (scriptName : nextScriptNames)
           findNextScript (Stmt { stmtCommand = "call", stmtArgs = [s] }) =
             Just s
           findNextScript _ = Nothing
-          allNextScripts = nextScriptNames ++ nextScriptNames2
 
       nextScripts <- loadScripts
         gameDir'
         (HS.insert scriptName scriptAlreadyLoaded)
-        allNextScripts
+        (nextScriptNames ++ nextScriptNames2)
 
       return $ (scriptName, script) : nextScripts
 
@@ -65,7 +64,7 @@ loadGame gameDir' = do
   gc <- loadGameConfig $ gameDir' ++ "/gameconfig.txt"
   scripts <- loadScripts gameDir' empty [getStringValue "startscript" gc]
   let needToLoadMusicList = any $ any isMusicStmt
-      isMusicStmt (Stmt { stmtCommand = "music" })= True
+      isMusicStmt (Stmt { stmtCommand = "music", stmtArgs = [] })= True
       isMusicStmt _ = False
 
   musicList <-
