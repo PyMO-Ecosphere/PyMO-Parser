@@ -2,6 +2,7 @@
 
 module Language.PyMO.Script
   ( Stmt (..)
+  , ScriptName
   , Script
   , loadPyMOScript
   ) where
@@ -10,11 +11,13 @@ import Data.Text as T
 import Language.PyMO.Utils as U
 import Data.Maybe (catMaybes)
 
+type ScriptName = String
+
 data Stmt = Stmt
   { stmtCommand :: Text
   , stmtArgs :: [Text]
   , stmtNextLines :: [Text]
-  , stmtScriptName :: String
+  , stmtScriptName :: ScriptName
   , stmtLineNumber :: Int
   }
 
@@ -25,7 +28,7 @@ instance Show Stmt where
 
 type Script = [Stmt]
 
-parseStmt :: String -> Int -> Text -> [Text] -> Maybe Stmt
+parseStmt :: ScriptName -> Int -> Text -> [Text] -> Maybe Stmt
 parseStmt scriptName lineNumber line nextLines
   | not $ "#" `T.isPrefixOf` line = Nothing
   | otherwise =
@@ -42,14 +45,14 @@ mapWithRemain f (x:xs) = f x xs : mapWithRemain f xs
 mapMaybeWithRemain :: (a -> [a] -> Maybe b) -> [a] -> [b]
 mapMaybeWithRemain f xs = catMaybes $ mapWithRemain f xs
 
-parsePyMOScript :: String -> Text -> Script
+parsePyMOScript :: ScriptName -> Text -> Script
 parsePyMOScript scriptName content =
   flip mapMaybeWithRemain (Prelude.zip [1..] $ U.lines content) $
     \(lineNumber, line) xs ->
       parseStmt scriptName lineNumber (U.strip $ removeComment $ U.strip line) $
         fmap snd xs
 
-loadPyMOScript :: String -> String -> IO Script
+loadPyMOScript :: String -> ScriptName -> IO Script
 loadPyMOScript gameDir scriptName = do
   content <- loadText $ gameDir ++ "/script/" ++ scriptName ++ ".txt"
   return $ parsePyMOScript scriptName content
