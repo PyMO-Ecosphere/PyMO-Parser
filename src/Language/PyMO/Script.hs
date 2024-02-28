@@ -16,7 +16,12 @@ data Stmt = Stmt
   , stmtNextLines :: [Text]
   , stmtScriptName :: String
   , stmtLineNumber :: Int
-  } deriving ( Show )
+  }
+
+instance Show Stmt where
+  show stmt =
+    "#" ++ T.unpack (stmtCommand stmt) ++ " "
+    ++ T.unpack (T.intercalate "," $ stmtArgs stmt)
 
 type Script = [Stmt]
 

@@ -20,6 +20,7 @@ library
                      , Language.PyMO.GameConfig
                      , Language.PyMO.Script
                      , Language.PyMO.MusicList
+                     , Language.PyMO.CGAlbum
 
   build-depends:       base >= 4.7 && < 5
                      , text
