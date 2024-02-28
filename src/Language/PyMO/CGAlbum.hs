@@ -4,6 +4,7 @@ module Language.PyMO.CGAlbum
 
 import Data.Text
 
+
 data CG = CG
   { cgAlbumName' :: String
   , cgLineNumber :: Int
