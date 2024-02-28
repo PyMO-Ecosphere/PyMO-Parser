@@ -1,7 +1,13 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings, PatternSynonyms #-}
 
 module Language.PyMO.Script
-  ( Stmt (..)
+  ( Stmt
+    ( stmtCommand
+    , stmtArgs
+    , stmtNextLines
+    , stmtScriptName
+    , stmtLineNumber )
+  , pattern Stmt
   , ScriptName
   , Script
   , loadPyMOScript

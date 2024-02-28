@@ -2,7 +2,6 @@
 
 module Language.PyMO.Utils
   ( loadText
-  , loadTextLines
   , commaCells
   , strip
   , lines
@@ -26,10 +25,6 @@ lines text =
   T.splitOn "\r\n" text
   >>= T.splitOn "\r"
   >>= T.splitOn "\n"
-
-
-loadTextLines :: FilePath -> IO [Text]
-loadTextLines = fmap lines . loadText
 
 
 commaCells :: T.Text -> [T.Text]

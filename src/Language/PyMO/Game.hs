@@ -1,7 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Language.PyMO.Game
-  ( Game (..)
+  ( Game
+    ( gameDir
+    , gameConfig
+    , gameScripts
+    , gameMusicList )
   , loadGame) where
 
 import Language.PyMO.GameConfig
@@ -41,8 +45,10 @@ loadScripts gameDir' scriptAlreadyLoaded (scriptName : nextScriptNames)
   | otherwise = do
       script <- loadPyMOScript gameDir' scriptName
       let nextScriptNames2 = unpack <$> mapMaybe findNextScript script
-          findNextScript (Stmt "change" [s] _ _ _) = Just s
-          findNextScript (Stmt "call" [s] _ _ _) = Just s
+          findNextScript (Stmt { stmtCommand = "change", stmtArgs = [s] }) =
+            Just s
+          findNextScript (Stmt { stmtCommand = "call", stmtArgs = [s] }) =
+            Just s
           findNextScript _ = Nothing
           allNextScripts = nextScriptNames ++ nextScriptNames2
 
