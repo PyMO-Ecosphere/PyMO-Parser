@@ -1,0 +1,38 @@
+cabal-version:       2.2
+
+name:                PyMO-Parser
+version:             0.1.0.0
+-- synopsis:
+-- description:
+homepage:            https://github.com/Seng-Jik/PyMO-Parser#readme
+license:             BSD-3-Clause
+license-file:        LICENSE
+author:              Seng-Jik
+maintainer:          xuchao199806@qq.com
+copyright:           Strrationalism Studio
+category:            Web
+build-type:          Simple
+extra-source-files:  README.md
+
+library
+  hs-source-dirs:      src
+  exposed-modules:     Language.PyMO.Utils
+  build-depends:       base >= 4.7 && < 5
+                     , text
+                     , with-utf8
+                     , unordered-containers
+
+  default-language:    Haskell2010
+  ghc-options:         -Wall
+                       -Wcompat
+                       -Widentities
+                       -Wincomplete-record-updates
+                       -Wincomplete-uni-patterns
+                       -Wmissing-export-lists
+                       -Wmissing-home-modules
+                       -Wpartial-fields
+                       -Wredundant-constraints
+
+source-repository head
+  type:     git
+  location: https://github.com/Seng-Jik/PyMO-Parser
