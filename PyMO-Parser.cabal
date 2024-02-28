@@ -21,6 +21,7 @@ library
                      , Language.PyMO.Script
                      , Language.PyMO.MusicList
                      , Language.PyMO.CGAlbum
+                     , Language.PyMO.Game
 
   build-depends:       base >= 4.7 && < 5
                      , text
