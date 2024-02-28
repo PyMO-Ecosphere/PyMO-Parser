@@ -17,10 +17,12 @@ extra-source-files:  README.md
 library
   hs-source-dirs:      src
   exposed-modules:     Language.PyMO.Utils
+                     , Language.PyMO.GameConfig
   build-depends:       base >= 4.7 && < 5
                      , text
                      , with-utf8
                      , unordered-containers
+                     , file-embed
 
   default-language:    Haskell2010
   ghc-options:         -Wall

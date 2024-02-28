@@ -4,7 +4,9 @@ module Language.PyMO.Utils
   ( loadText
   , loadTextLines
   , commaCells
-  , strip) where
+  , strip
+  , lines
+  , unCommaCells ) where
 
 import Prelude hiding ( lines )
 import Data.Text as T hiding ( lines, strip )
@@ -30,6 +32,9 @@ commaCells :: T.Text -> [T.Text]
 commaCells x
   | T.null x = []
   | otherwise = T.splitOn "," x
+
+unCommaCells :: [T.Text] -> T.Text
+unCommaCells = T.intercalate ","
 
 strip :: T.Text -> T.Text
 strip = T.dropWhile isSpace . T.dropWhileEnd isSpace
