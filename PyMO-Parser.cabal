@@ -18,6 +18,9 @@ library
   hs-source-dirs:      src
   exposed-modules:     Language.PyMO.Utils
                      , Language.PyMO.GameConfig
+                     , Language.PyMO.Script
+                     , Language.PyMO.MusicList
+
   build-depends:       base >= 4.7 && < 5
                      , text
                      , with-utf8
