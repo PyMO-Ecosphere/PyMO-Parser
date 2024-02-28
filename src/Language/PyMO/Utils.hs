@@ -1,4 +1,6 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings, PatternSynonyms #-}
+{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE FlexibleInstances #-}
 
 module Language.PyMO.Utils
   ( loadText
@@ -6,11 +8,15 @@ module Language.PyMO.Utils
   , strip
   , lines
   , strippedLines
-  , unCommaCells ) where
+  , unCommaCells
+  , pattern IsInt
+  , ToString (..)
+  ) where
 
 import Prelude hiding ( lines )
 import Data.Text as T hiding ( lines, strip )
 import qualified Data.Text.IO.Utf8 as Utf8
+import Text.Read (readMaybe)
 
 
 loadText :: FilePath -> IO Text
@@ -48,4 +54,20 @@ strip = T.dropWhile isSpace . T.dropWhileEnd isSpace
         isSpace '\t' = True
         isSpace '\r' = True
         isSpace _ = False
+
+
+class ToString a where
+  toString :: a -> String
+
+
+instance ToString Text where
+  toString = unpack
+
+
+instance ToString String where
+  toString = id
+
+
+pattern IsInt :: ToString a => Int -> a
+pattern IsInt i <- (readMaybe . toString -> Just i)
 
