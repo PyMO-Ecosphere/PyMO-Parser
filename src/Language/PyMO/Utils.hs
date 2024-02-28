@@ -1,4 +1,5 @@
-{-# LANGUAGE OverloadedStrings, PatternSynonyms #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE FlexibleInstances #-}
 
