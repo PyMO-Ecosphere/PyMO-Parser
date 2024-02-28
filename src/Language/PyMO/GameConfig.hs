@@ -40,7 +40,7 @@ writeGameConfig filePath gc =
 
 parseGameConfig :: Text -> GameConfig
 parseGameConfig =
-  GameConfig . fromList . parseLines . fmap U.strip . U.lines
+  GameConfig . fromList . parseLines . strippedLines
   where parseLines = mapMaybe parseLine
         parseLine = t . commaCells . U.strip
         t [] = Nothing

@@ -33,7 +33,7 @@ parseSingleMusic line = do
 
 parseMusicList :: Text -> IO MusicList
 parseMusicList musicList =
-  catMaybes <$> mapM parseSingleMusic (T.lines musicList)
+  catMaybes <$> mapM parseSingleMusic (strippedLines musicList)
 
 
 loadMusicList :: FilePath -> IO MusicList

@@ -5,6 +5,7 @@ module Language.PyMO.Utils
   , commaCells
   , strip
   , lines
+  , strippedLines
   , unCommaCells ) where
 
 import Prelude hiding ( lines )
@@ -25,6 +26,10 @@ lines text =
   T.splitOn "\r\n" text
   >>= T.splitOn "\r"
   >>= T.splitOn "\n"
+
+
+strippedLines :: Text -> [Text]
+strippedLines text = Prelude.filter (not . T.null) $ strip <$> lines text
 
 
 commaCells :: T.Text -> [T.Text]
