@@ -22,12 +22,15 @@ library
                      , Language.PyMO.MusicList
                      , Language.PyMO.CGAlbum
                      , Language.PyMO.Game
+                     , Language.PyMO.Package
 
   build-depends:       base >= 4.7 && < 5
                      , text
                      , with-utf8
                      , unordered-containers
                      , file-embed
+                     , bytestring
+                     , binary
 
   default-language:    Haskell2010
   ghc-options:         -Wall
