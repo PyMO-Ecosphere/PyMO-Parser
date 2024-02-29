@@ -10,14 +10,17 @@ module Language.PyMO.Utils
   , lines
   , strippedLines
   , unCommaCells
+  , loadStrippedLines
+  , groupByKey
   , pattern IsInt
   , ToString (..)
   ) where
 
 import Prelude hiding ( lines )
-import Data.Text as T hiding ( lines, strip )
+import Data.Text as T hiding (filter, lines, strip, partition)
 import qualified Data.Text.IO.Utf8 as Utf8
 import Text.Read (readMaybe)
+import Data.List (partition)
 
 
 loadText :: FilePath -> IO Text
@@ -39,6 +42,10 @@ strippedLines :: Text -> [Text]
 strippedLines text = Prelude.filter (not . T.null) $ strip <$> lines text
 
 
+loadStrippedLines :: FilePath -> IO [Text]
+loadStrippedLines = fmap strippedLines . loadText
+
+
 commaCells :: T.Text -> [T.Text]
 commaCells x
   | T.null x = []
@@ -55,6 +62,13 @@ strip = T.dropWhile isSpace . T.dropWhileEnd isSpace
         isSpace '\t' = True
         isSpace '\r' = True
         isSpace _ = False
+
+
+groupByKey :: Eq k => (a -> k) -> [a] -> [(k, [a])]
+groupByKey _ [] = []
+groupByKey f (x:xs) = (fx, x : sameKey) : groupByKey f differentKey
+  where fx = f x
+        (sameKey, differentKey) = partition ((== fx) . f) xs
 
 
 class ToString a where
