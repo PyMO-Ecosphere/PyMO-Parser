@@ -19,6 +19,7 @@ import Language.PyMO.Utils
 import Language.PyMO.Script (ScriptName)
 import Control.Monad (forM)
 import Data.Maybe (catMaybes)
+import System.FilePath ( (</>), (<.>) )
 
 
 data CG = CG
@@ -58,7 +59,7 @@ getPage pageId cgAlbum = lookup pageId $ cgaCGs cgAlbum
 
 loadCGAlbumInternal :: FilePath -> ScriptName -> String -> IO CGAlbum
 loadCGAlbumInternal gameDir listFileName bgPrefix = do
-  file <- loadStrippedLines $ gameDir ++ "/script/" ++ listFileName ++ ".txt"
+  file <- loadStrippedLines $ gameDir </> "script" </> listFileName <.> "txt"
   cgs' <- fmap catMaybes $ forM (fmap loadCG file) $ \case
     Left err -> putStrLn err >> return Nothing
     Right x -> return $ Just x

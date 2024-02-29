@@ -16,7 +16,7 @@ module Language.PyMO.Script
 import Data.Text as T
 import Language.PyMO.Utils as U
 import Data.Maybe (catMaybes)
-
+import System.FilePath ( (</>), (<.>) )
 
 type ScriptName = String
 
@@ -70,6 +70,6 @@ parsePyMOScript scriptName content =
 
 loadPyMOScript :: FilePath -> ScriptName -> IO Script
 loadPyMOScript gameDir scriptName = do
-  content <- loadText $ gameDir ++ "/script/" ++ scriptName ++ ".txt"
+  content <- loadText $ gameDir </> "script" </> scriptName <.> "txt"
   return $ parsePyMOScript scriptName content
 

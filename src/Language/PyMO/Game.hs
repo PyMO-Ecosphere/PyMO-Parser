@@ -18,7 +18,7 @@ import Data.Text (unpack)
 import Data.List (nub)
 import Language.PyMO.CGAlbum
 import Control.Monad (forM)
-
+import System.FilePath ( (</>) )
 
 data Game = Game
   { gameDir :: FilePath
@@ -68,7 +68,7 @@ loadScripts gameDir' scriptAlreadyLoaded (scriptName : nextScriptNames)
 
 loadGame :: FilePath -> IO Game
 loadGame gameDir' = do
-  gc <- loadGameConfig $ gameDir' ++ "/gameconfig.txt"
+  gc <- loadGameConfig $ gameDir' </> "gameconfig.txt"
   scripts <- loadScripts gameDir' empty [getStringValue "startscript" gc]
   let needToLoadMusicList = any $ any isMusicStmt
       isMusicStmt (Stmt { stmtCommand = "music", stmtArgs = [] })= True
@@ -84,7 +84,7 @@ loadGame gameDir' = do
 
   musicList <-
     if needToLoadMusicList (snd <$> scripts)
-      then Just <$> loadMusicList (gameDir' ++ "/script/music_list.txt")
+      then Just <$> loadMusicList (gameDir' </> "script/music_list.txt")
       else pure Nothing
 
   return $ Game

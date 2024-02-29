@@ -8,15 +8,20 @@ module Language.PyMO.Package
   , extractFile
   , extractAllFiles
   , extractPackage
+  , packFiles
   ) where
 
 import Data.Word (Word32)
-import Data.ByteString.Lazy as B
-import Data.ByteString as BS ( takeWhile )
+import Data.ByteString.Lazy as B hiding (length, take, repeat)
+import qualified Data.ByteString.Lazy as B
+import qualified Data.ByteString as BS
 import Data.Binary.Get ( getWord32le, runGet, getByteString, Get )
-import Data.Text as T (Text, unpack)
-import Data.Text.Encoding ( decodeUtf8 )
-import Control.Monad (replicateM, forM_)
+import Data.Text as T (Text, unpack, pack)
+import Data.Text.Encoding ( decodeUtf8, encodeUtf8 )
+import Control.Monad (replicateM, forM_, forM)
+import System.FilePath ( (</>), (<.>), takeBaseName )
+import Data.ByteString.Builder
+import Prelude hiding (replicate)
 
 
 data FileEntry = FileEntry
@@ -73,11 +78,38 @@ extractAllFiles :: PackageReader -> FilePath -> String -> IO ()
 extractAllFiles packageReader outDir fileExt =
   forM_ (files packageReader) $ \fileEntry ->
     extractFile packageReader fileEntry $
-      outDir ++ "/" ++ T.unpack (fileName fileEntry) ++ fileExt
+      outDir </> T.unpack (fileName fileEntry) <.> fileExt
 
 
 extractPackage :: FilePath -> FilePath -> String -> IO ()
 extractPackage packagePath outDir fileExt = do
   pkg <- openPackage packagePath
   extractAllFiles pkg outDir fileExt
+
+
+packByteStrings :: [(String, LazyByteString)] -> LazyByteString
+packByteStrings filesToPack = toLazyByteString $ mconcat
+  [ word32LE $ fromIntegral $ length filesToPack
+  , fileHeader baseOffset filesToPack
+  , mconcat $ fmap (lazyByteString . snd) filesToPack ]
+  where baseOffset = fromIntegral $ 4 + (32 + 4 + 4) * length filesToPack
+        fileHeader _ [] = mempty
+        fileHeader offset (x : xs) =
+          mappend (fileEntry (fst x) offset $ fromIntegral $ B.length $ snd x) $
+            fileHeader (offset + fromIntegral (B.length $ snd x)) xs
+        fileEntry name offset len =
+          mconcat [ convertStr name, word32LE offset, word32LE len ]
+        convertStr text =
+          padStr $ BS.take 32 $ encodeUtf8 $ T.pack text
+        padStr str =
+          mappend (byteString str) $ byteString $
+            BS.replicate (32 - BS.length str) 0
+
+
+packFiles :: [FilePath] -> FilePath -> IO ()
+packFiles filesToPack outPath = do
+  files' <- forM filesToPack $ \filePath -> do
+    binary <- B.readFile filePath
+    return (takeBaseName filePath, binary)
+  B.writeFile outPath $ packByteStrings files'
 
