@@ -5,7 +5,7 @@ version:             0.1.0.0
 -- synopsis:
 -- description:
 homepage:            https://github.com/Seng-Jik/PyMO-Parser#readme
-license:             BSD-3-Clause
+license:             AGPL-3
 license-file:        LICENSE
 author:              Seng-Jik
 maintainer:          xuchao199806@qq.com
