@@ -4,8 +4,8 @@ name:                PyMO-Parser
 version:             0.1.0.0
 -- synopsis:
 -- description:
-homepage:            https://github.com/Seng-Jik/PyMO-Parser#readme
-license:             AGPL-3
+homepage:            https://github.com/PyMO-Ecosphere/PyMO-Parser#readme
+license:             AGPL-3.0-or-later
 license-file:        LICENSE
 author:              Seng-Jik
 maintainer:          xuchao199806@qq.com
