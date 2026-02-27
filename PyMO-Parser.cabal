@@ -26,7 +26,6 @@ library
 
   build-depends:       base >= 4.7 && < 5
                      , text
-                     , with-utf8
                      , unordered-containers
                      , file-embed
                      , bytestring
