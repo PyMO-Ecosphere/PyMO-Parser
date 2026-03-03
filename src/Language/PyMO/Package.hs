@@ -11,7 +11,7 @@ module Language.PyMO.Package
   , packFiles
   ) where
 
-import Data.Word (Word32, Word64)
+import Data.Word (Word32)
 import Data.ByteString.Lazy as B hiding (length, take, repeat)
 import qualified Data.ByteString.Lazy as B
 import qualified Data.ByteString as BS
@@ -36,12 +36,11 @@ data FileEntry = FileEntry
 
 data PackageReader = PackageReader
   { files :: [FileEntry]
-  , handle :: Handle
-  , baseOffset :: Word64 }
+  , handle :: Handle }
 
 
 instance Show PackageReader where
-  show (PackageReader files' _ _) = show files'
+  show (PackageReader files' _) = show files'
 
 
 openPackage :: FilePath -> ResourceT IO PackageReader
@@ -67,17 +66,15 @@ openPackage filePath = do
   let files' = runGet getFileEntries (B.fromStrict entriesBS)
   return $ PackageReader
     { files = files'
-    , handle = h
-    , baseOffset = 0 }
+    , handle = h }
 
 
 getFile :: PackageReader -> FileEntry -> IO LazyByteString
 getFile packageReader fileEntry = do
   let h = handle packageReader
-      base = baseOffset packageReader
-      offset = fromIntegral (offsetInPackage fileEntry) + base
+      offset = fromIntegral (offsetInPackage fileEntry)
       len = fromIntegral (fileLength fileEntry)
-  hSeek h AbsoluteSeek (fromIntegral offset)
+  hSeek h AbsoluteSeek offset
   BS.hGet h len >>= return . B.fromStrict
 
 
