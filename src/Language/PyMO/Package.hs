@@ -11,7 +11,7 @@ module Language.PyMO.Package
   , packFiles
   ) where
 
-import Data.Word (Word32)
+import Data.Word (Word32, Word64)
 import Data.ByteString.Lazy as B hiding (length, take, repeat)
 import qualified Data.ByteString.Lazy as B
 import qualified Data.ByteString as BS
@@ -19,7 +19,10 @@ import Data.Binary.Get ( getWord32le, runGet, getByteString, Get )
 import Data.Text as T (Text, unpack, pack)
 import Data.Text.Encoding ( decodeUtf8, encodeUtf8 )
 import Control.Monad (replicateM, forM_, forM)
+import Control.Monad.Trans.Resource
+import Control.Monad.IO.Class
 import System.FilePath ( (</>), (<.>), takeBaseName )
+import System.IO
 import Data.ByteString.Builder
 import Prelude hiding (replicate)
 
@@ -33,20 +36,25 @@ data FileEntry = FileEntry
 
 data PackageReader = PackageReader
   { files :: [FileEntry]
-  , bytes :: LazyByteString }
+  , handle :: Handle
+  , baseOffset :: Word64 }
 
 
 instance Show PackageReader where
-  show (PackageReader files' _) = show files'
+  show (PackageReader files' _ _) = show files'
 
 
-openPackage :: FilePath -> IO PackageReader
+openPackage :: FilePath -> ResourceT IO PackageReader
 openPackage filePath = do
-  bytes' <- B.readFile filePath
+  h <- liftIO $ openBinaryFile filePath ReadMode
+  _ <- register $ hClose h
+  liftIO $ hSeek h AbsoluteSeek 0
+  fileCountBS <- liftIO $ BS.hGet h 4
+  let fileCount = runGet getWord32le (B.fromStrict fileCountBS)
+  let entrySize = fromIntegral fileCount * (32 + 4 + 4)
+  entriesBS <- liftIO $ BS.hGet h entrySize
   let getFileEntries :: Get [FileEntry]
-      getFileEntries = do
-        fileCount <- fromIntegral <$> getWord32le
-        replicateM fileCount getFileEntry
+      getFileEntries = replicateM (fromIntegral fileCount) getFileEntry
       getFileEntry :: Get FileEntry
       getFileEntry = do
         fileNameBS <- getByteString 32
@@ -56,22 +64,27 @@ openPackage filePath = do
           { fileName = decodeUtf8 $ BS.takeWhile (/= 0) fileNameBS
           , offsetInPackage = offset
           , fileLength = length' }
-
+  let files' = runGet getFileEntries (B.fromStrict entriesBS)
   return $ PackageReader
-    { files = runGet getFileEntries bytes'
-    , bytes = bytes' }
+    { files = files'
+    , handle = h
+    , baseOffset = 0 }
 
 
-getFile :: PackageReader -> FileEntry -> LazyByteString
-getFile packageReader fileEntry =
-  B.take (fromIntegral $ fileLength fileEntry) $
-    B.drop (fromIntegral $ offsetInPackage fileEntry) $
-      bytes packageReader
+getFile :: PackageReader -> FileEntry -> IO LazyByteString
+getFile packageReader fileEntry = do
+  let h = handle packageReader
+      base = baseOffset packageReader
+      offset = fromIntegral (offsetInPackage fileEntry) + base
+      len = fromIntegral (fileLength fileEntry)
+  hSeek h AbsoluteSeek (fromIntegral offset)
+  BS.hGet h len >>= return . B.fromStrict
 
 
 extractFile :: PackageReader -> FileEntry -> FilePath -> IO ()
 extractFile packageReader fileEntry outputPath = do
-  B.writeFile outputPath $ getFile packageReader fileEntry
+  bytes <- getFile packageReader fileEntry
+  B.writeFile outputPath bytes
 
 
 extractAllFiles :: PackageReader -> FilePath -> String -> IO ()
@@ -82,17 +95,17 @@ extractAllFiles packageReader outDir fileExt =
 
 
 extractPackage :: FilePath -> FilePath -> String -> IO ()
-extractPackage packagePath outDir fileExt = do
+extractPackage packagePath outDir fileExt = runResourceT $ do
   pkg <- openPackage packagePath
-  extractAllFiles pkg outDir fileExt
+  liftIO $ extractAllFiles pkg outDir fileExt
 
 
 packByteStrings :: [(String, LazyByteString)] -> LazyByteString
 packByteStrings filesToPack = toLazyByteString $ mconcat
   [ word32LE $ fromIntegral $ length filesToPack
-  , fileHeader baseOffset filesToPack
+  , fileHeader baseOffset' filesToPack
   , mconcat $ fmap (lazyByteString . snd) filesToPack ]
-  where baseOffset = fromIntegral $ 4 + (32 + 4 + 4) * length filesToPack
+  where baseOffset' = fromIntegral $ 4 + (32 + 4 + 4) * length filesToPack
         fileHeader _ [] = mempty
         fileHeader offset (x : xs) =
           mappend (fileEntry (fst x) offset $ fromIntegral $ B.length $ snd x) $

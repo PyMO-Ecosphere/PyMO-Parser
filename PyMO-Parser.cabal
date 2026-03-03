@@ -31,6 +31,7 @@ library
                      , bytestring
                      , binary
                      , filepath
+                     , resourcet
 
   default-language:    Haskell2010
   ghc-options:         -Wall
