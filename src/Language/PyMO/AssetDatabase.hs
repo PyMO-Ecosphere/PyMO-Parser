@@ -42,7 +42,6 @@ data AssetKind
   | System
   | Video
   | Voice
-  | Icon
   deriving (Show, Eq, Generic)
 
 instance Hashable AssetKind
@@ -115,23 +114,6 @@ getAssetRef db kind name =
     Bgm -> getUnpackedAssetRef db name nameLowered kind "bgm" "bgmformat"
     System -> getUnpackedAssetRef db name nameLowered kind "system" "systemformat"
     Video -> getUnpackedAssetRef db name nameLowered kind "video" "videoformat"
-
-    -- Special case: icon is always a single file
-    Icon -> getIconAssetRef db name nameLowered
-
--- | Internal helper for icon assets
-getIconAssetRef :: AssetDatabase -> AssetName -> AssetNameLowered -> IO (Maybe AssetReference)
-getIconAssetRef db name nameLowered = do
-  let filePath = _adGameDir db </> "icon.png"
-  exists <- doesFileExist filePath
-  if exists
-    then return $ Just $ AssetReference
-      { arName = name
-      , arNameLowered = nameLowered
-      , arKind = Icon
-      , _arSource = Unpacked filePath
-      }
-    else return Nothing
 
 -- | Internal helper for packable assets
 getAssetRef' :: AssetDatabase -> AssetName -> AssetNameLowered -> AssetKind
