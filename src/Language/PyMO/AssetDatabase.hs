@@ -138,7 +138,10 @@ getUnpackedAssetRef :: AssetDatabase -> AssetName -> AssetNameLowered -> AssetKi
                     -> String -> String -> IO (Maybe AssetReference)
 getUnpackedAssetRef db name nameLowered kind subDir formatKey = do
   let format = getStringValue (T.pack formatKey) (_adGameConfig db)
-      ext = if null format then "" else "." ++ format
+      ext = case format of
+             "" -> ""
+             ('.':_) -> format
+             _ -> "." ++ format
       filePath = _adGameDir db </> subDir </> name ++ ext
   exists <- doesFileExist filePath
   if exists
