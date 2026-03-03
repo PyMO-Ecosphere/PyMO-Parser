@@ -1,10 +1,10 @@
+{-# LANGUAGE DeriveGeneric #-}
+
 module Language.PyMO.AssetDatabase
   ( AssetKind(..)
   , AssetName
   , AssetNameLowered
   , AssetDatabase
-    ( abGameConfig
-    , abGameDir )
   , openAssetDatabase
   , AssetReference
     ( arName
@@ -17,6 +17,7 @@ module Language.PyMO.AssetDatabase
 import Control.Monad.Trans.Resource (ResourceT)
 import Control.Monad.IO.Class (liftIO)
 import Data.Char (toLower, toUpper)
+import Data.Hashable (Hashable)
 import qualified Data.Text as T
 import qualified Data.ByteString.Lazy as B
 import qualified Data.List as List
@@ -29,6 +30,7 @@ import Language.PyMO.Package
   , PackageReader(files)
   , openPackage
   , getFile )
+import GHC.Generics (Generic)
 
 
 -- | Types of assets in PyMO games
@@ -41,7 +43,9 @@ data AssetKind
   | Video
   | Voice
   | Icon
-  deriving (Show, Eq)
+  deriving (Show, Eq, Generic)
+
+instance Hashable AssetKind
 
 type AssetName = String
 type AssetNameLowered = String
@@ -54,13 +58,12 @@ data AssetSource
 -- | Database of game assets with optional package readers for packed assets
 data AssetDatabase = AssetDatabase
   { -- Internal: Package readers for packed assets (not exported)
-    _abBg :: Maybe PackageReader
-  , _abChara :: Maybe PackageReader
-  , _abSe :: Maybe PackageReader
-  , _abVoice :: Maybe PackageReader
-    -- Exported fields
-  , abGameConfig :: GameConfig
-  , abGameDir :: FilePath
+    _adBg :: Maybe PackageReader
+  , _adChara :: Maybe PackageReader
+  , _adSe :: Maybe PackageReader
+  , _adVoice :: Maybe PackageReader
+  , _adGameConfig :: GameConfig
+  , _adGameDir :: FilePath
   }
 
 -- | Reference to a specific asset
@@ -82,12 +85,12 @@ openAssetDatabase gameDir gameConfig = do
   voiceReader <- openPackageIfExists (gameDir </> "voice" </> "voice.pak")
 
   return $ AssetDatabase
-    { _abBg = bgReader
-    , _abChara = charaReader
-    , _abSe = seReader
-    , _abVoice = voiceReader
-    , abGameConfig = gameConfig
-    , abGameDir = gameDir
+    { _adBg = bgReader
+    , _adChara = charaReader
+    , _adSe = seReader
+    , _adVoice = voiceReader
+    , _adGameConfig = gameConfig
+    , _adGameDir = gameDir
     }
   where
     openPackageIfExists :: FilePath -> ResourceT IO (Maybe PackageReader)
@@ -103,10 +106,10 @@ getAssetRef db kind name =
   let nameLowered = map toLower name
   in case kind of
     -- Packable assets: check package first, then individual files
-    Bg -> getAssetRef' db name nameLowered kind _abBg "bg" "bgformat"
-    Chara -> getAssetRef' db name nameLowered kind _abChara "chara" "charaformat"
-    Se -> getAssetRef' db name nameLowered kind _abSe "se" "seformat"
-    Voice -> getAssetRef' db name nameLowered kind _abVoice "voice" "voiceformat"
+    Bg -> getAssetRef' db name nameLowered kind _adBg "bg" "bgformat"
+    Chara -> getAssetRef' db name nameLowered kind _adChara "chara" "charaformat"
+    Se -> getAssetRef' db name nameLowered kind _adSe "se" "seformat"
+    Voice -> getAssetRef' db name nameLowered kind _adVoice "voice" "voiceformat"
 
     -- Non-packable assets: always individual files
     Bgm -> getUnpackedAssetRef db name nameLowered kind "bgm" "bgmformat"
@@ -119,7 +122,7 @@ getAssetRef db kind name =
 -- | Internal helper for icon assets
 getIconAssetRef :: AssetDatabase -> AssetName -> AssetNameLowered -> IO (Maybe AssetReference)
 getIconAssetRef db name nameLowered = do
-  let filePath = abGameDir db </> "icon.png"
+  let filePath = _adGameDir db </> "icon.png"
   exists <- doesFileExist filePath
   if exists
     then return $ Just $ AssetReference
@@ -152,9 +155,9 @@ getAssetRef' db name nameLowered kind getReader subDir formatKey =
 getUnpackedAssetRef :: AssetDatabase -> AssetName -> AssetNameLowered -> AssetKind
                     -> String -> String -> IO (Maybe AssetReference)
 getUnpackedAssetRef db name nameLowered kind subDir formatKey = do
-  let format = getStringValue (T.pack formatKey) (abGameConfig db)
+  let format = getStringValue (T.pack formatKey) (_adGameConfig db)
       ext = if null format then "" else "." ++ format
-      filePath = abGameDir db </> subDir </> name ++ ext
+      filePath = _adGameDir db </> subDir </> name ++ ext
   exists <- doesFileExist filePath
   if exists
     then return $ Just $ AssetReference
