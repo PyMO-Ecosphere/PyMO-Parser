@@ -23,6 +23,7 @@ library
                      , Language.PyMO.CGAlbum
                      , Language.PyMO.Game
                      , Language.PyMO.Package
+                     , Language.PyMO.AssetDatabase
 
   build-depends:       base >= 4.7 && < 5
                      , text
@@ -31,6 +32,8 @@ library
                      , bytestring
                      , binary
                      , filepath
+                     , resourcet
+                     , directory
 
   default-language:    Haskell2010
   ghc-options:         -Wall
