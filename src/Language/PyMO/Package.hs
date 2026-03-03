@@ -12,12 +12,13 @@ module Language.PyMO.Package
   ) where
 
 import Data.Word (Word32)
-import Data.ByteString.Lazy as B hiding (length, take, repeat)
+import Data.ByteString.Lazy as B hiding (length, take, repeat, map)
 import qualified Data.ByteString.Lazy as B
 import qualified Data.ByteString as BS
 import Data.Binary.Get ( getWord32le, runGet, getByteString, Get )
 import Data.Text as T (Text, unpack, pack)
 import Data.Text.Encoding ( decodeUtf8, encodeUtf8 )
+import Data.Char (toUpper)
 import Control.Monad (replicateM, forM_, forM)
 import Control.Monad.Trans.Resource
 import Control.Monad.IO.Class
@@ -120,6 +121,6 @@ packFiles :: [FilePath] -> FilePath -> IO ()
 packFiles filesToPack outPath = do
   files' <- forM filesToPack $ \filePath -> do
     binary <- B.readFile filePath
-    return (takeBaseName filePath, binary)
+    return (map toUpper (takeBaseName filePath), binary)
   B.writeFile outPath $ packByteStrings files'
 
