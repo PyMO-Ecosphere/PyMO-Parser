@@ -11,6 +11,7 @@ module Language.PyMO.Script
   , ScriptName
   , Script
   , loadPyMOScript
+  , parsePyMOScript
   ) where
 
 import Data.Text as T
