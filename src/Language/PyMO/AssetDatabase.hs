@@ -105,19 +105,19 @@ getAssetRef db kind name =
   let nameLowered = map toLower name
   in case kind of
     -- Packable assets: check package first, then individual files
-    Bg -> getAssetRef' db name nameLowered kind _adBg "bg" "bgformat"
-    Chara -> getAssetRef' db name nameLowered kind _adChara "chara" "charaformat"
-    Se -> getAssetRef' db name nameLowered kind _adSe "se" "seformat"
-    Voice -> getAssetRef' db name nameLowered kind _adVoice "voice" "voiceformat"
+    Bg -> getAssetRef' db name nameLowered kind _adBg "bg" $ Right "bgformat"
+    Chara -> getAssetRef' db name nameLowered kind _adChara "chara" $ Right "charaformat"
+    Se -> getAssetRef' db name nameLowered kind _adSe "se" $ Right "seformat"
+    Voice -> getAssetRef' db name nameLowered kind _adVoice "voice" $ Right "voiceformat"
 
     -- Non-packable assets: always individual files
-    Bgm -> getUnpackedAssetRef db name nameLowered kind "bgm" "bgmformat"
-    System -> getUnpackedAssetRef db name nameLowered kind "system" "systemformat"
-    Video -> getUnpackedAssetRef db name nameLowered kind "video" "videoformat"
+    Bgm -> getUnpackedAssetRef db name nameLowered kind "bgm" $ Right "bgmformat"
+    System -> getUnpackedAssetRef db name nameLowered kind "system" $ Left ".png"
+    Video -> getUnpackedAssetRef db name nameLowered kind "video" $ Left ".mp4"
 
 -- | Internal helper for packable assets
 getAssetRef' :: AssetDatabase -> AssetName -> AssetNameLowered -> AssetKind
-             -> (AssetDatabase -> Maybe PackageReader) -> String -> String -> IO (Maybe AssetReference)
+             -> (AssetDatabase -> Maybe PackageReader) -> String -> (Either String String) -> IO (Maybe AssetReference)
 getAssetRef' db name nameLowered kind getReader subDir formatKey =
   case getReader db of
     -- Check package first
@@ -135,10 +135,12 @@ getAssetRef' db name nameLowered kind getReader subDir formatKey =
 
 -- | Internal helper for unpacked assets
 getUnpackedAssetRef :: AssetDatabase -> AssetName -> AssetNameLowered -> AssetKind
-                    -> String -> String -> IO (Maybe AssetReference)
+                    -> String -> (Either String String) -> IO (Maybe AssetReference)
 getUnpackedAssetRef db name nameLowered kind subDir formatKey = do
-  let format = getStringValue (T.pack formatKey) (_adGameConfig db)
-      ext = case format of
+  let format = case formatKey of
+        Left x -> x
+        Right x -> getStringValue (T.pack x) (_adGameConfig db)
+  let ext = case format of
              "" -> ""
              ('.':_) -> format
              _ -> "." ++ format
